@@ -17,7 +17,7 @@ namespace LibVLCSharp.Forms.Shared
     /// Represents the playback controls for a <see cref="LibVLCSharp.Shared.MediaPlayer"/>.
     /// </summary>
     [XamlCompilation(XamlCompilationOptions.Compile)]
-    public partial class PlaybackControls : TemplatedView
+    public partial class PlaybackControls : TemplatedView, IPlaybackControls
     {
         private const string AudioSelectionAvailableState = "AudioSelectionAvailable";
         private const string AudioSelectionUnavailableState = "AudioSelectionUnavailable";
@@ -622,22 +622,22 @@ namespace LibVLCSharp.Forms.Shared
             set => SetValue(IsAspectRatioButtonVisibleProperty, value);
         }
 
-        bool _enableRendererDiscovery = true;
+        private static readonly BindableProperty EnableRendererDiscoveryProperty = BindableProperty.Create(nameof(EnableRendererDiscovery),
+            typeof(bool), typeof(PlaybackControls), true, propertyChanged: EnableRendererDiscoveryPropertyChanged);
+
         /// <summary>
         /// Enable or disable renderer discovery
         /// </summary>
-        internal bool EnableRendererDiscovery
+        public bool EnableRendererDiscovery
         {
-            get => _enableRendererDiscovery;
+            get => (bool)GetValue(EnableRendererDiscoveryProperty);
             set
             {
-                _enableRendererDiscovery = value;
-                IsCastButtonVisible = _enableRendererDiscovery;
-                UpdateCastAvailability();
-                ResetRendererDiscovery();
+                SetValue(EnableRendererDiscoveryProperty, value);
+                
             }
         }
-        
+
         /// <summary>
         /// Identifies the <see cref="IsRewindButtonVisible"/> dependency property.
         /// </summary>s
@@ -734,6 +734,18 @@ namespace LibVLCSharp.Forms.Shared
             playbackControls.UpdateCastAvailability();
             playbackControls.UpdateErrorMessage();
             playbackControls.ResetRendererDiscovery();
+        }
+
+        private static void EnableRendererDiscoveryPropertyChanged(BindableObject bindable, object oldValue, object newValue)
+        {
+            ((PlaybackControls)bindable).UpdateRendererDiscovery((bool)newValue);
+        }
+
+        private void UpdateRendererDiscovery(bool enableRendererDiscovery)
+        {
+            IsCastButtonVisible = enableRendererDiscovery;
+            UpdateCastAvailability();
+            ResetRendererDiscovery();
         }
 
         private void ResetRendererDiscovery()

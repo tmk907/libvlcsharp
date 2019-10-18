@@ -49,14 +49,14 @@ namespace LibVLCSharp.Forms.Shared
             set => SetValue(MediaPlayerProperty, value);
         }
 
-        private static readonly BindableProperty PlaybackControlsProperty = BindableProperty.Create(nameof(PlaybackControls),
-            typeof(PlaybackControls), typeof(MediaPlayerElement), propertyChanged: PlaybackControlsPropertyChanged);
+        public static readonly BindableProperty PlaybackControlsProperty = BindableProperty.Create(nameof(PlaybackControls),
+            typeof(IPlaybackControls), typeof(MediaPlayerElement), propertyChanged: PlaybackControlsPropertyChanged);
         /// <summary>
         /// Gets or sets the playback controls for the media.
         /// </summary>
-        public PlaybackControls PlaybackControls
+        public IPlaybackControls PlaybackControls
         {
-            get => (PlaybackControls)GetValue(PlaybackControlsProperty);
+            get => (IPlaybackControls)GetValue(PlaybackControlsProperty);
             set => SetValue(PlaybackControlsProperty, value);
         }
 
@@ -71,19 +71,6 @@ namespace LibVLCSharp.Forms.Shared
             private set => SetValue(VideoViewProperty, value);
         }
 
-        private static readonly BindableProperty EnableRendererDiscoveryProperty = BindableProperty.Create(nameof(EnableRendererDiscovery),
-            typeof(bool), typeof(PlaybackControls), true, propertyChanged: EnableRendererDiscoveryPropertyChanged);
-
-        /// <summary>
-        /// Enable or disable renderer discovery
-        /// </summary>
-        public bool EnableRendererDiscovery
-        {
-            get => (bool)GetValue(EnableRendererDiscoveryProperty);
-            set => SetValue(EnableRendererDiscoveryProperty, value);
-        }
-
-       
         private void OnVideoViewChanged(VideoView videoView)
         {
             if (videoView != null)
@@ -120,21 +107,13 @@ namespace LibVLCSharp.Forms.Shared
             }
         }
 
-        private void OnPlayControlsChanged(PlaybackControls playbackControls)
+        private void OnPlayControlsChanged(IPlaybackControls playbackControls)
         {
             if (playbackControls != null)
             {
+                playbackControls.LibVLC = LibVLC;
                 playbackControls.MediaPlayer = MediaPlayer;
                 playbackControls.VideoView = VideoView;
-            }
-        }
-
-        private void OnEnableRendererDiscoveryChanged(bool enableRendererDiscovery)
-        {
-            var playbackControls = PlaybackControls;
-            if (playbackControls != null)
-            {
-                playbackControls.EnableRendererDiscovery = enableRendererDiscovery;
             }
         }
 
@@ -155,12 +134,7 @@ namespace LibVLCSharp.Forms.Shared
 
         private static void PlaybackControlsPropertyChanged(BindableObject bindable, object oldValue, object newValue)
         {
-            ((MediaPlayerElement)bindable).OnPlayControlsChanged((PlaybackControls)newValue);
-        }
-
-        private static void EnableRendererDiscoveryPropertyChanged(BindableObject bindable, object oldValue, object newValue)
-        {
-            ((MediaPlayerElement)bindable).OnEnableRendererDiscoveryChanged((bool)newValue);
+            ((MediaPlayerElement)bindable).OnPlayControlsChanged((IPlaybackControls)newValue);
         }
 
         /// <summary>
@@ -182,10 +156,7 @@ namespace LibVLCSharp.Forms.Shared
                 }
                 if (PlaybackControls == null)
                 {
-                    PlaybackControls = new PlaybackControls
-                    {
-                        EnableRendererDiscovery = EnableRendererDiscovery
-                    };
+                    PlaybackControls = new PlaybackControls();
                 }
 
                 var application = Application.Current;
